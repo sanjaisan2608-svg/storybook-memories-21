@@ -233,6 +233,20 @@ body { font-family: var(--font-body); }
 .birthday-app { position: relative; isolation: isolate; height: 100svh; min-height: 520px; overflow: hidden; background: radial-gradient(ellipse at 49% 48%, oklch(0.22 0.045 336 / 38%), transparent 47%), var(--cinema-bg); color: var(--foreground); }
 .birthday-app::before { position: absolute; z-index: -1; inset: 0; content: ""; pointer-events: none; background: linear-gradient(115deg, transparent 0 18%, oklch(0.3 0.055 337 / 12%) 46%, transparent 74%); }
 .film-grain { position: absolute; z-index: 8; inset: 0; pointer-events: none; opacity: .12; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.2'/%3E%3C/svg%3E"); }
+.heart-drift { position: absolute; z-index: 1; inset: 0; overflow: hidden; pointer-events: none; }
+.heart-drift span { position: absolute; bottom: -48px; left: var(--heart-x); color: var(--cinema-pink); font: 400 var(--heart-size)/1 var(--font-body); opacity: 0; filter: drop-shadow(0 0 12px oklch(0.75 0.14 3 / 46%)); animation: heart-rise var(--heart-duration) var(--heart-delay) infinite ease-in-out; }
+.heart-drift span:nth-child(1) { --heart-x: 8%; --heart-size: 19px; --heart-duration: 13s; --heart-delay: 0s; }
+.heart-drift span:nth-child(2) { --heart-x: 18%; --heart-size: 14px; --heart-duration: 16s; --heart-delay: .8s; }
+.heart-drift span:nth-child(3) { --heart-x: 31%; --heart-size: 16px; --heart-duration: 14s; --heart-delay: 3.4s; }
+.heart-drift span:nth-child(4) { --heart-x: 46%; --heart-size: 13px; --heart-duration: 17s; --heart-delay: .4s; }
+.heart-drift span:nth-child(5) { --heart-x: 57%; --heart-size: 20px; --heart-duration: 15s; --heart-delay: 2.2s; }
+.heart-drift span:nth-child(6) { --heart-x: 68%; --heart-size: 14px; --heart-duration: 18s; --heart-delay: 5.2s; }
+.heart-drift span:nth-child(7) { --heart-x: 78%; --heart-size: 17px; --heart-duration: 14s; --heart-delay: 1.5s; }
+.heart-drift span:nth-child(8) { --heart-x: 89%; --heart-size: 13px; --heart-duration: 16s; --heart-delay: 4.1s; }
+.heart-drift span:nth-child(9) { --heart-x: 96%; --heart-size: 16px; --heart-duration: 15s; --heart-delay: 6.2s; }
+@keyframes heart-rise { 0% { transform: translate3d(0, 0, 0) rotate(-12deg) scale(.62); opacity: 0; } 12% { opacity: .5; } 38% { transform: translate3d(9px, -34vh, 0) rotate(8deg) scale(1.08); opacity: .34; } 62% { transform: translate3d(-10px, -63vh, 0) rotate(-7deg) scale(.94); opacity: .46; } 88% { opacity: .2; } 100% { transform: translate3d(8px, -106vh, 0) rotate(12deg) scale(.76); opacity: 0; } }
+.opening-copy { animation: opening-arrive 1.05s .08s cubic-bezier(.19, 1, .22, 1) both; }
+@keyframes opening-arrive { from { opacity: 0; transform: translate3d(0, 20px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
 .story-header { position: absolute; z-index: 9; inset: 0 0 auto; height: 82px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 clamp(22px, 5.2vw, 84px); border-bottom: 1px solid oklch(0.82 0.035 349 / 8%); }
 .wordmark { display: inline-flex; gap: 10px; align-items: center; width: fit-content; color: var(--foreground); text-decoration: none; font: italic 15px var(--font-display); }.wordmark svg { width: 14px; color: var(--cinema-pink); stroke-width: 1.4; }
 .chapter-progress { display: flex; align-items: center; justify-content: center; gap: 7px; }.progress-line { display: flex; align-items: center; width: clamp(18px, 2.65vw, 38px); height: 20px; padding: 0; border: 0; background: none; }.progress-line::before { width: 100%; height: 1px; content: ""; background: oklch(0.82 0.035 349 / 22%); transition: height .4s, background .4s, box-shadow .4s; }.progress-line.active::before { height: 2px; background: var(--cinema-pink); box-shadow: 0 0 12px oklch(0.75 0.14 3 / 75%); }.progress-line.past::before { background: oklch(0.75 0.14 3 / 55%); }
@@ -269,7 +283,7 @@ body { font-family: var(--font-body); }
   .story-footer { height: 68px; padding: 0 17px; }.footer-actions { gap: 5px; }.nav-control { gap: 6px; padding-inline: 8px; font-size: 10px; }.nav-control svg { width: 14px; }.chapter-count { font-size: 12px; }.music-control { width: 35px; height: 35px; }.personalize-panel { padding-top: 23px; }.panel-heading h2 { font-size: 34px; }.lightbox { grid-template-columns: 38px minmax(0, 1fr) 38px; padding: 56px 8px; }.lightbox figure { height: min(73svh, 650px); }.lightbox > button:not(.lightbox-close) { width: 34px; height: 34px; }
 }
 @media (max-width: 390px) { .opening-layout { padding-right: 21px; padding-left: 21px; }.story-header { padding-inline: 13px; }.wordmark span { font-size: 11px; }.chapter-progress { gap: 3px; }.progress-line { width: 11px; }.birthday-layout { padding-right: 20px; padding-left: 20px; }.birthday-copy h2 { font-size: 47px; }.birthday-portrait { right: 19px; width: 39vw; }.memory-frame h3 { font-size: 13px; }.qualities-layout { padding-right: 20px; padding-left: 20px; }.quality-text strong { font-size: 17px; }.story-footer { padding-inline: 12px; } }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } .heart-drift { display: none; } }
 
 /* Midnight Romance — the birthday story's shared cinematic design system. */
 @theme inline {

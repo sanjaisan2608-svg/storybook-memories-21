@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type ReactNode, type TouchEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, AudioLines, Camera, Check, ChevronLeft, ChevronRight, Heart, ImagePlus, Music2, Play, Settings2, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -84,7 +84,7 @@ function BirthdayStory() {
   };
   const addMusic = (event: ChangeEvent<HTMLInputElement>) => { const file = event.currentTarget.files?.[0]; if (file) { setMusic(URL.createObjectURL(file)); setPlaying(false); setNotice("Your song will begin when the story opens."); } };
   const addVideo = (event: ChangeEvent<HTMLInputElement>) => { const file = event.currentTarget.files?.[0]; if (file) { setVideo(URL.createObjectURL(file)); setFinished(false); setNotice("Your birthday video is ready for the last chapter."); } };
-  const touchEnd = (event: React.TouchEvent<HTMLElement>) => {
+  const touchEnd = (event: TouchEvent<HTMLElement>) => {
     if (touchX.current === null) return;
     const x = event.changedTouches[0]?.clientX;
     if (x !== undefined && Math.abs(x - touchX.current) > 75) go(page + (x < touchX.current ? 1 : -1));
@@ -93,6 +93,7 @@ function BirthdayStory() {
 
   return <div className="birthday-app" onTouchStart={(e) => { touchX.current = e.touches[0]?.clientX ?? null; }} onTouchEnd={touchEnd}>
     <div className="film-grain" aria-hidden="true" />
+    <div className="heart-drift" aria-hidden="true">{Array.from({ length: 9 }, (_, i) => <span key={i}>{i % 3 === 1 ? "♡" : "♥"}</span>)}</div>
     <header className="story-header">
       <a className="wordmark" href="/" aria-label="A birthday story"><Heart /> <span>for you, always</span></a>
       <nav className="chapter-progress" aria-label="Story chapters">{chapters.map((chapter, i) => <button type="button" key={chapter} title={chapter} aria-label={`Chapter ${i + 1}: ${chapter}`} aria-current={page === i ? "step" : undefined} className={`progress-line${page === i ? " active" : ""}${page > i ? " past" : ""}`} onClick={() => go(i)} />)}</nav>
@@ -136,9 +137,9 @@ function Opening({ onStart }: { onStart: () => void }) { return <div className="
   <div className="opening-copy"><Eyebrow>A little something made just for you</Eyebrow><h1>Hey, you<span>.</span></h1><p>I made something special for you.</p><Button className="cinema-button" onClick={onStart}>Open your birthday surprise <ArrowRight /></Button></div>
   <span className="opening-caption">A story in eight little chapters</span>
 </div>; }
-function Eyebrow({ children }: { children: React.ReactNode }) { return <span className="eyebrow"><i />{children}</span>; }
+function Eyebrow({ children }: { children: ReactNode }) { return <span className="eyebrow"><i />{children}</span>; }
 
-function Birthday({ name, photo, onAdd, onNext }: { name: string; photo?: Photo; onAdd: () => void; onNext: () => void }) { return <div className="birthday-layout">
+function Birthday({ name, photo, onAdd, onNext }: { name: string; photo: Photo | undefined; onAdd: () => void; onNext: () => void }) { return <div className="birthday-layout">
   <div className="birthday-copy"><Eyebrow>Today is all about you</Eyebrow><h2>Happy<br />Birthday<span>,</span></h2><p className="birthday-name">{name}</p><p className="chapter-description">Today is a lovely reason to celebrate the person you are—and all the moments still waiting for you.</p><Button className="text-link" onClick={onNext} variant="ghost">Discover her story <ArrowRight /></Button></div>
   <figure className={`birthday-portrait${photo ? " has-photo" : ""}`}>{photo ? <img src={photo.src} alt={photo.name || "A favourite photograph"} /> : <button className="portrait-invitation" onClick={onAdd} type="button"><Camera /><span>A favourite photo<br />belongs here</span><small><ImagePlus /> Add your photos</small></button>}<figcaption>one of a kind, every day</figcaption></figure><span className="chapter-mark">CHAPTER TWO <i>—</i> JUST FOR YOU</span>
 </div>; }
@@ -192,5 +193,5 @@ function Personalize({ story, notice, musicReady, videoReady, onStory, onPhotos,
   </aside></div>;
 }
 function Field({ label, value, placeholder, onChange, area = false }: { label: string; value: string; placeholder: string; onChange: (value: string) => void; area?: boolean }) { return <label>{label}{area ? <textarea rows={3} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} /> : <input value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />}</label>; }
-function Upload({ icon, label, help, ready, onChange, accept }: { icon: React.ReactNode; label: string; help: string; ready: boolean; onChange: (event: ChangeEvent<HTMLInputElement>) => void; accept: string }) { return <label className="upload-media">{icon}<span>{label}<small>{help}</small></span><Check className={ready ? "ready" : "not-ready"} /><input type="file" accept={accept} onChange={onChange} /></label>; }
+function Upload({ icon, label, help, ready, onChange, accept }: { icon: ReactNode; label: string; help: string; ready: boolean; onChange: (event: ChangeEvent<HTMLInputElement>) => void; accept: string }) { return <label className="upload-media">{icon}<span>{label}<small>{help}</small></span><Check className={ready ? "ready" : "not-ready"} /><input type="file" accept={accept} onChange={onChange} /></label>; }
 function Lightbox({ photo, onClose, onPrevious, onNext }: { photo: Photo; onClose: () => void; onPrevious: () => void; onNext: () => void }) { return <div className="lightbox" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}><Button className="lightbox-close" onClick={onClose} size="icon" variant="ghost" aria-label="Close photograph"><X /></Button><Button onClick={onPrevious} size="icon" variant="ghost" aria-label="Previous photograph"><ChevronLeft /></Button><figure><img src={photo.src} alt={photo.name || "Personal photograph"} /><figcaption>{photo.name}</figcaption></figure><Button onClick={onNext} size="icon" variant="ghost" aria-label="Next photograph"><ChevronRight /></Button></div>; }
