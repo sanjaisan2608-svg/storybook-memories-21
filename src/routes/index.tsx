@@ -93,7 +93,7 @@ function BirthdayStory() {
 
   return <div className="birthday-app" onTouchStart={(e) => { touchX.current = e.touches[0]?.clientX ?? null; }} onTouchEnd={touchEnd}>
     <div className="film-grain" aria-hidden="true" />
-    <div className="heart-drift" aria-hidden="true">{Array.from({ length: 9 }, (_, i) => <span key={i}>♥</span>)}</div>
+    <div className="heart-drift" aria-hidden="true">{Array.from({ length: 9 }, (_, i) => <span key={i}>{i % 3 === 1 ? "♡" : "♥"}</span>)}</div>
     <header className="story-header">
       <a className="wordmark" href="/" aria-label="A birthday story"><Heart /> <span>for you, always</span></a>
       <nav className="chapter-progress" aria-label="Story chapters">{chapters.map((chapter, i) => <button type="button" key={chapter} title={chapter} aria-label={`Chapter ${i + 1}: ${chapter}`} aria-current={page === i ? "step" : undefined} className={`progress-line${page === i ? " active" : ""}${page > i ? " past" : ""}`} onClick={() => go(i)} />)}</nav>
