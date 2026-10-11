@@ -133,6 +133,7 @@ async function shrink(file: File): Promise<string> {
 
 function Opening({ onStart }: { onStart: () => void }) { return <div className="opening-layout">
   <img className="opening-rose" src={rose} alt="A burgundy rose and drifting petals" width={1792} height={1024} />
+  <div className="heart-drift" aria-hidden="true">{Array.from({ length: 9 }, (_, i) => <span key={i}>♥</span>)}</div>
   <div className="opening-copy"><Eyebrow>A little something made just for you</Eyebrow><h1>Hey, you<span>.</span></h1><p>I made something special for you.</p><Button className="cinema-button" onClick={onStart}>Open your birthday surprise <ArrowRight /></Button></div>
   <span className="opening-caption">A story in eight little chapters</span>
 </div>; }
