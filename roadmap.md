@@ -1,0 +1,3 @@
+- [x] Build the eight-chapter cinematic birthday experience from the uploaded brief.
+- [ ] Add an attractive, gentle heart entrance animation.
+- [ ] Validate the live experience and responsive layout.
