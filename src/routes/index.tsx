@@ -36,12 +36,17 @@ function BirthdayStory() {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("birthday-story-v1");
-      if (saved) { const value: Partial<Story> = JSON.parse(saved); setStory({ ...blank, ...value, photos: value.photos ?? [] }); }
+      const text = localStorage.getItem("birthday-story-text-v1");
+      if (text) { const value: Partial<Story> = JSON.parse(text); setStory((s) => ({ ...s, ...value, photos: s.photos })); }
+      const photos = localStorage.getItem("birthday-story-photos-v1");
+      if (photos) { const value: Photo[] = JSON.parse(photos); setStory((s) => ({ ...s, photos: Array.isArray(value) ? value : [] })); }
     } catch { setNotice("Saved details could not be restored."); }
   }, []);
   useEffect(() => {
-    try { localStorage.setItem("birthday-story-v1", JSON.stringify(story)); }
+    const { photos, ...text } = story;
+    try { localStorage.setItem("birthday-story-text-v1", JSON.stringify(text)); }
+    catch { setNotice("Your details could not be saved on this device."); }
+    try { localStorage.setItem("birthday-story-photos-v1", JSON.stringify(photos)); }
     catch { setNotice("Some photos could not be saved. Try fewer or smaller images."); }
   }, [story]);
   useEffect(() => {
