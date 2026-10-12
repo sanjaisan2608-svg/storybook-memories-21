@@ -1,3 +1,6 @@
 - [x] Build the eight-chapter cinematic birthday experience from the uploaded brief.
 - [x] Add an attractive, gentle heart entrance animation.
 - [x] Validate the live experience and responsive layout.
+- [ ] Keep personalization details and photos saved across reloads, with safe migration of existing saved details.
+- [ ] Animate her uploaded photos as they appear in the story chapters.
+- [ ] Verify saved details/photos after reload and check the photo reveals in the preview.
