@@ -16,6 +16,13 @@ globalThis.__nitro_vite_envs__ = services;
 //#endregion
 //#region #nitro/virtual/public-assets-data
 var public_assets_data_default = {
+	"/assets/routes-B0Y2U80p.js": {
+		"type": "text/javascript; charset=utf-8",
+		"etag": "\"11714-U580ttBr5b0hux3PMoau4wMp8MY\"",
+		"mtime": "2026-10-12T18:38:38.716Z",
+		"size": 71444,
+		"path": "../public/assets/routes-B0Y2U80p.js"
+	},
 	"/favicon.ico": {
 		"type": "image/vnd.microsoft.icon",
 		"etag": "\"4f95-3RXc3p2mhEAs1WBwaIvE0Y0uu0Y\"",
@@ -23,12 +30,12 @@ var public_assets_data_default = {
 		"size": 20373,
 		"path": "../public/favicon.ico"
 	},
-	"/assets/routes-Bva3UaD1.js": {
-		"type": "text/javascript; charset=utf-8",
-		"etag": "\"11714-Az9UF2V944OlfTy9pZob25z/pAI\"",
-		"mtime": "2026-10-12T18:27:28.891Z",
-		"size": 71444,
-		"path": "../public/assets/routes-Bva3UaD1.js"
+	"/assets/midnight-rose-D_928pVl.jpg": {
+		"type": "image/jpeg",
+		"etag": "\"1beeb-V+KleMax3hUW1VJ2hkPWH0/WiuE\"",
+		"mtime": "2026-10-12T18:38:38.717Z",
+		"size": 114411,
+		"path": "../public/assets/midnight-rose-D_928pVl.jpg"
 	},
 	"/robots.txt": {
 		"type": "text/plain; charset=utf-8",
@@ -37,26 +44,19 @@ var public_assets_data_default = {
 		"size": 174,
 		"path": "../public/robots.txt"
 	},
-	"/assets/midnight-rose-D_928pVl.jpg": {
-		"type": "image/jpeg",
-		"etag": "\"1beeb-V+KleMax3hUW1VJ2hkPWH0/WiuE\"",
-		"mtime": "2026-10-12T18:27:28.893Z",
-		"size": 114411,
-		"path": "../public/assets/midnight-rose-D_928pVl.jpg"
-	},
-	"/assets/styles-BPnM76LC.css": {
+	"/assets/styles-DWossunn.css": {
 		"type": "text/css; charset=utf-8",
-		"etag": "\"1ed55-R1gd4OwWHeDsPepHg5AD6jzyJDg\"",
-		"mtime": "2026-10-12T18:27:28.897Z",
-		"size": 126293,
-		"path": "../public/assets/styles-BPnM76LC.css"
+		"etag": "\"1f6d9-XZdeDutfcl8c3cdtdc2ex3m96Zs\"",
+		"mtime": "2026-10-12T18:38:38.719Z",
+		"size": 128729,
+		"path": "../public/assets/styles-DWossunn.css"
 	},
-	"/assets/index-Bzmh-65A.js": {
+	"/assets/index-DbdchBtK.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"8f753-5d2UiDeMhLp89mwyc687mVJyDz8\"",
-		"mtime": "2026-10-12T18:27:28.889Z",
+		"etag": "\"8f753-9VKGT+lz/YR00iS68rLGkTdmbu4\"",
+		"mtime": "2026-10-12T18:38:38.714Z",
 		"size": 587603,
-		"path": "../public/assets/index-Bzmh-65A.js"
+		"path": "../public/assets/index-DbdchBtK.js"
 	}
 };
 //#endregion
