@@ -22,6 +22,7 @@ export const Route = createFileRoute("/")({
 
 function BirthdayStory() {
   const [story, setStory] = useState<Story>(blank);
+  const [storyLoaded, setStoryLoaded] = useState(false);
   const [page, setPage] = useState(0);
   const [settings, setSettings] = useState(false);
   const [expanded, setExpanded] = useState<number | null>(null);
@@ -37,18 +38,22 @@ function BirthdayStory() {
   useEffect(() => {
     try {
       const text = localStorage.getItem("birthday-story-text-v1");
-      if (text) { const value: Partial<Story> = JSON.parse(text); setStory((s) => ({ ...s, ...value, photos: s.photos })); }
+      const legacy = localStorage.getItem("birthday-story-v1");
+      const saved: Partial<Story> = JSON.parse(text ?? legacy ?? "{}");
       const photos = localStorage.getItem("birthday-story-photos-v1");
-      if (photos) { const value: Photo[] = JSON.parse(photos); setStory((s) => ({ ...s, photos: Array.isArray(value) ? value : [] })); }
+      const savedPhotos: Photo[] = photos ? JSON.parse(photos) : saved.photos ?? [];
+      setStory({ ...blank, ...saved, photos: Array.isArray(savedPhotos) ? savedPhotos : [] });
     } catch { setNotice("Saved details could not be restored."); }
+    finally { setStoryLoaded(true); }
   }, []);
   useEffect(() => {
+    if (!storyLoaded) return;
     const { photos, ...text } = story;
     try { localStorage.setItem("birthday-story-text-v1", JSON.stringify(text)); }
     catch { setNotice("Your details could not be saved on this device."); }
     try { localStorage.setItem("birthday-story-photos-v1", JSON.stringify(photos)); }
     catch { setNotice("Some photos could not be saved. Try fewer or smaller images."); }
-  }, [story]);
+  }, [story, storyLoaded]);
   useEffect(() => {
     if (!music) return;
     const player = new Audio(music); player.loop = true; player.volume = 0; audio.current = player;
