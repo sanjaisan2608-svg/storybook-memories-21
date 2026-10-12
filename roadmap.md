@@ -3,4 +3,6 @@
 - [x] Validate the live experience and responsive layout.
 - [ ] Keep personalization details and photos saved across reloads, with safe migration of existing saved details.
 - [ ] Animate her uploaded photos as they appear in the story chapters.
+- [ ] Inspect the shared GitHub source and any included image references before continuing the cross-device editing design.
+- [ ] Make shared edits available only to the site owner, while birthday visitors can view the story.
 - [ ] Verify saved details/photos after reload and check the photo reveals in the preview.
