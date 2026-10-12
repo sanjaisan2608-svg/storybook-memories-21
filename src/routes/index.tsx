@@ -79,80 +79,113 @@ function BirthdayStory() {
   }, [page]);
 
   useEffect(() => {
-<<<<<<< HEAD
-    try {
-      const text = localStorage.getItem("birthday-story-text-v1");
-      const legacy = localStorage.getItem("birthday-story-v1");
-      const saved: Partial<Story> = JSON.parse(text ?? legacy ?? "{}");
-      const photos = localStorage.getItem("birthday-story-photos-v1");
-      const savedPhotos: Photo[] = photos ? JSON.parse(photos) : saved.photos ?? [];
-      setStory({ ...blank, ...saved, photos: Array.isArray(savedPhotos) ? savedPhotos : [] });
-    } catch { setNotice("Saved details could not be restored."); }
-    finally { setStoryLoaded(true); }
-  }, []);
-  useEffect(() => {
-    if (!storyLoaded) return;
-    const { photos, ...text } = story;
-    try { localStorage.setItem("birthday-story-text-v1", JSON.stringify(text)); }
-    catch { setNotice("Your details could not be saved on this device."); }
-    try { localStorage.setItem("birthday-story-photos-v1", JSON.stringify(photos)); }
-    catch { setNotice("Some photos could not be saved. Try fewer or smaller images."); }
-  }, [story, storyLoaded]);
-=======
     if (!supabase) return;
+
     let cancelled = false;
+
     void supabase.auth.getSession().then(({ data, error }) => {
       if (error) setNotice("Your creator sign-in could not be checked.");
-      if (!cancelled) setCloudUser(data.session?.user.email ?? null);
+      if (!cancelled) {
+        setCloudUser(data.session?.user.email ?? null);
+      }
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setCloudUser(session?.user.email ?? null);
     });
-    return () => { cancelled = true; subscription.unsubscribe(); };
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
     let cancelled = false;
+
     const restore = async () => {
       let savedStory = blank;
       let legacyPhotos: Photo[] = [];
+
       try {
         const text = localStorage.getItem("birthday-story-text-v1");
         const legacy = localStorage.getItem("birthday-story-v1");
         const saved: Partial<Story> = JSON.parse(text ?? legacy ?? "{}");
         const oldPhotos = localStorage.getItem("birthday-story-photos-v1");
-        legacyPhotos = oldPhotos ? JSON.parse(oldPhotos) : saved.photos ?? [];
-        savedStory = { ...blank, ...saved, letter: saved.letter || defaultLetter, photos: Array.isArray(legacyPhotos) ? legacyPhotos : [] };
-      } catch { setNotice("Saved details could not be restored."); }
+
+        legacyPhotos = oldPhotos
+          ? JSON.parse(oldPhotos)
+          : saved.photos ?? [];
+
+        savedStory = {
+          ...blank,
+          ...saved,
+          letter: saved.letter || defaultLetter,
+          photos: Array.isArray(legacyPhotos) ? legacyPhotos : [],
+        };
+      } catch {
+        setNotice("Saved details could not be restored.");
+      }
+
       try {
         const persistedPhotos = await readPersistentValue<Photo[]>("photos");
-        if (Array.isArray(persistedPhotos)) savedStory = { ...savedStory, photos: persistedPhotos };
-        else if (legacyPhotos.length) {
+
+        if (Array.isArray(persistedPhotos)) {
+          savedStory = { ...savedStory, photos: persistedPhotos };
+        } else if (legacyPhotos.length) {
           await writePersistentValue("photos", legacyPhotos);
           localStorage.removeItem("birthday-story-photos-v1");
         }
-      } catch { setNotice("Saved photos could not be restored from this device."); }
+      } catch {
+        setNotice("Saved photos could not be restored from this device.");
+      }
+
       try {
-        const [backgroundBlob, favoriteSongBlob, birthdayVideoBlob] = await Promise.all([
-          readPersistentValue<Blob>("background-song"),
-          readPersistentValue<Blob>("favorite-song"),
-          readPersistentValue<Blob>("birthday-video"),
-        ]);
+        const [backgroundBlob, favoriteSongBlob, birthdayVideoBlob] =
+          await Promise.all([
+            readPersistentValue<Blob>("background-song"),
+            readPersistentValue<Blob>("favorite-song"),
+            readPersistentValue<Blob>("birthday-video"),
+          ]);
+
         if (!cancelled) {
           if (backgroundBlob) setMusic(URL.createObjectURL(backgroundBlob));
-          if (favoriteSongBlob) setFavoriteSong(URL.createObjectURL(favoriteSongBlob));
+          if (favoriteSongBlob) {
+            setFavoriteSong(URL.createObjectURL(favoriteSongBlob));
+          }
           if (birthdayVideoBlob) setVideo(URL.createObjectURL(birthdayVideoBlob));
         }
-      } catch { setNotice("Uploaded audio or video could not be restored from this device."); }
+      } catch {
+        setNotice("Uploaded audio or video could not be restored from this device.");
+      }
+
       if (supabase) {
-        const { data, error } = await supabase.from("birthday_stories").select("payload").eq("id", "main").maybeSingle();
+        const { data, error } = await supabase
+          .from("birthday_stories")
+          .select("payload")
+          .eq("id", "main")
+          .maybeSingle();
+
         if (error) {
           setCloudLoadFailed(true);
-          setNotice("The shared story could not be loaded from the cloud. Showing this device's saved copy.");
-        }
-        else if (data?.payload) {
+          setNotice(
+            "The shared story could not be loaded from the cloud. Showing this device's saved copy.",
+          );
+        } else if (data?.payload) {
           const payload = data.payload as Partial<CloudStory>;
-          if (payload.story) savedStory = { ...blank, ...payload.story, photos: Array.isArray(payload.story.photos) ? payload.story.photos : [] };
+
+          if (payload.story) {
+            savedStory = {
+              ...blank,
+              ...payload.story,
+              photos: Array.isArray(payload.story.photos)
+                ? payload.story.photos
+                : [],
+            };
+          }
+
           if (!cancelled) {
             setMusic(payload.backgroundMusic ?? "");
             setFavoriteSong(payload.favoriteSong ?? "");
@@ -160,75 +193,164 @@ function BirthdayStory() {
           }
         }
       }
+
       if (!cancelled) {
         setStory(savedStory);
         setStoryLoaded(true);
         setCloudReady(true);
       }
     };
+
     void restore();
-    return () => { cancelled = true; };
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
   useEffect(() => {
     if (!storyLoaded) return;
+
     const { photos: _photos, ...text } = story;
-    try { localStorage.setItem("birthday-story-text-v1", JSON.stringify(text)); }
-    catch { setNotice("Your details could not be saved on this device."); }
+
+    try {
+      localStorage.setItem("birthday-story-text-v1", JSON.stringify(text));
+    } catch {
+      setNotice("Your details could not be saved on this device.");
+    }
   }, [story, storyLoaded]);
+
   useEffect(() => {
     if (!storyLoaded) return;
-    void writePersistentValue("photos", story.photos).then(() => {
-      localStorage.removeItem("birthday-story-photos-v1");
-    }).catch(() => setNotice("Your photos could not be saved on this device."));
+
+    void writePersistentValue("photos", story.photos)
+      .then(() => {
+        localStorage.removeItem("birthday-story-photos-v1");
+      })
+      .catch(() => setNotice("Your photos could not be saved on this device."));
   }, [story.photos, storyLoaded]);
+
   useEffect(() => {
     const cloudClient = supabase;
-    if (!cloudClient || !cloudUser || !cloudReady || cloudLoadFailed || !storyLoaded) return;
+
+    if (
+      !cloudClient ||
+      !cloudUser ||
+      !cloudReady ||
+      cloudLoadFailed ||
+      !storyLoaded
+    ) {
+      return;
+    }
+
     const saveId = ++cloudSaveSequence.current;
+
     const timeout = window.setTimeout(() => {
       void (async () => {
         try {
-          const syncedPhotos = await Promise.all(story.photos.map(async (photo) => {
-            if (!photo.src.startsWith("data:")) return photo;
-            const blob = await fetch(photo.src).then((response) => response.blob());
-            const src = await uploadCloudAsset(blob, `photos/${crypto.randomUUID()}.jpg`);
-            return { ...photo, src };
-          }));
-          const syncMedia = async (src: string, key: string, path: string) => {
+          const syncedPhotos = await Promise.all(
+            story.photos.map(async (photo) => {
+              if (!photo.src.startsWith("data:")) return photo;
+
+              const blob = await fetch(photo.src).then((response) =>
+                response.blob(),
+              );
+
+              const src = await uploadCloudAsset(
+                blob,
+                `photos/${crypto.randomUUID()}.jpg`,
+              );
+
+              return { ...photo, src };
+            }),
+          );
+
+          const syncMedia = async (
+            src: string,
+            key: string,
+            path: string,
+          ) => {
             if (!src.startsWith("blob:")) return src;
+
             const blob = await readPersistentValue<Blob>(key);
-            if (!blob) throw new Error("A selected media file is missing from this device. Please upload it again.");
+
+            if (!blob) {
+              throw new Error(
+                "A selected media file is missing from this device. Please upload it again.",
+              );
+            }
+
             return uploadCloudAsset(blob, `${path}/${crypto.randomUUID()}`);
           };
-          const [backgroundMusic, syncedFavoriteSong, syncedVideo] = await Promise.all([
-            syncMedia(music, "background-song", "audio/background"),
-            syncMedia(favoriteSong, "favorite-song", "audio/favorite"),
-            syncMedia(video, "birthday-video", "video"),
-          ]);
+
+          const [backgroundMusic, syncedFavoriteSong, syncedVideo] =
+            await Promise.all([
+              syncMedia(music, "background-song", "audio/background"),
+              syncMedia(favoriteSong, "favorite-song", "audio/favorite"),
+              syncMedia(video, "birthday-video", "video"),
+            ]);
+
           if (saveId !== cloudSaveSequence.current) return;
+
           const syncedStory = { ...story, photos: syncedPhotos };
-          const { error } = await cloudClient.from("birthday_stories").upsert({
-            id: "main",
-            payload: { story: syncedStory, backgroundMusic, favoriteSong: syncedFavoriteSong, video: syncedVideo } satisfies CloudStory,
-            updated_at: new Date().toISOString(),
-          });
+
+          const { error } = await cloudClient
+            .from("birthday_stories")
+            .upsert({
+              id: "main",
+              payload: {
+                story: syncedStory,
+                backgroundMusic,
+                favoriteSong: syncedFavoriteSong,
+                video: syncedVideo,
+              } satisfies CloudStory,
+              updated_at: new Date().toISOString(),
+            });
+
           if (error) throw error;
-          if (syncedPhotos.some((photo, index) => photo.src !== story.photos[index]?.src)) setStory(syncedStory);
+
+          if (
+            syncedPhotos.some(
+              (photo, index) => photo.src !== story.photos[index]?.src,
+            )
+          ) {
+            setStory(syncedStory);
+          }
+
           if (backgroundMusic !== music) setMusic(backgroundMusic);
-          if (syncedFavoriteSong !== favoriteSong) setFavoriteSong(syncedFavoriteSong);
+          if (syncedFavoriteSong !== favoriteSong) {
+            setFavoriteSong(syncedFavoriteSong);
+          }
           if (syncedVideo !== video) setVideo(syncedVideo);
+
           setNotice("Your story is saved to your cloud account.");
         } catch (error) {
           if (saveId === cloudSaveSequence.current) {
             console.error("Cloud story sync failed:", error);
-            setNotice(error instanceof Error ? `Cloud sync failed: ${error.message}` : "Cloud sync failed. Please try again.");
+            setNotice(
+              error instanceof Error
+                ? `Cloud sync failed: ${error.message}`
+                : "Cloud sync failed. Please try again.",
+            );
           }
         }
       })();
     }, 800);
-    return () => { window.clearTimeout(timeout); };
-  }, [story, music, favoriteSong, video, cloudUser, cloudReady, cloudLoadFailed, storyLoaded]);
->>>>>>> bc9eb61 (v)
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [
+    story,
+    music,
+    favoriteSong,
+    video,
+    cloudUser,
+    cloudReady,
+    cloudLoadFailed,
+    storyLoaded,
+  ]);
+
   useEffect(() => {
     if (!music) return;
     const player = new Audio(music); player.loop = true; player.volume = 0; audio.current = player;
