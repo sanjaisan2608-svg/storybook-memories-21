@@ -42,3 +42,5 @@ The story can be viewed publicly, while changes are restricted to the creator's 
 7. Open the deployed link, select **Personalize**, and sign in using the creator account. Add or update the story there. The public link can view the saved story but must sign in to edit it.
 
 Cloud uploads require the project setup and Vercel environment variables. Before cloud is configured, local edits are stored only in that browser. Existing local content can be migrated by signing in on the same browser after configuration; leave the app open until the panel reports that the story is saved to the cloud account.
+
+After adding a video, keep the app open until it reports **“Your story is saved to your cloud account.”** The video is saved on the current device immediately, then uploaded to Supabase for other visitors and devices. If the app reports that it is saved only on this device, configure Supabase and sign in as the creator before expecting it to appear for everyone. A locally saved video is kept as a fallback if the cloud story does not yet contain a video.

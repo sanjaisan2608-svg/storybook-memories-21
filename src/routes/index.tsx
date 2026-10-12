@@ -111,6 +111,7 @@ function BirthdayStory() {
     const restore = async () => {
       let savedStory = blank;
       let legacyPhotos: Photo[] = [];
+      let localVideoUrl = "";
 
       try {
         const text = localStorage.getItem("birthday-story-text-v1");
@@ -158,7 +159,10 @@ function BirthdayStory() {
           if (favoriteSongBlob) {
             setFavoriteSong(URL.createObjectURL(favoriteSongBlob));
           }
-          if (birthdayVideoBlob) setVideo(URL.createObjectURL(birthdayVideoBlob));
+          if (birthdayVideoBlob) {
+            localVideoUrl = URL.createObjectURL(birthdayVideoBlob);
+            setVideo(localVideoUrl);
+          }
         }
       } catch {
         setNotice("Uploaded audio or video could not be restored from this device.");
@@ -190,10 +194,22 @@ function BirthdayStory() {
           }
 
           if (!cancelled) {
-            setMusic(payload.backgroundMusic ?? "");
-            setFavoriteSong(payload.favoriteSong ?? "");
-            setVideo(payload.video ?? "");
-          }
+  setMusic(payload.backgroundMusic ?? "");
+  setFavoriteSong(payload.favoriteSong ?? "");
+
+  // Keep the local video if the cloud does not have one yet.
+  if (payload.video) {
+    setVideo(payload.video);
+  } else {
+    const localVideo = await readPersistentValue<Blob>("birthday-video");
+
+    if (localVideo) {
+      setVideo((current) =>
+        current || URL.createObjectURL(localVideo)
+      );
+    }
+  }
+}
         }
       }
 
@@ -576,7 +592,15 @@ function BirthdayStory() {
     if (!file) return;
     try {
       await writePersistentValue("birthday-video", file);
-      setVideo(URL.createObjectURL(file)); setFinished(false); setNotice("Your birthday video is saved on this device.");
+      setVideo(URL.createObjectURL(file));
+      setFinished(false);
+      setNotice(
+        !supabaseConfigured
+          ? "Video saved on this device only. Cloud sharing is not configured."
+          : cloudUser
+            ? "Video saved on this device. Syncing it to the shared story…"
+            : "Video saved on this device only. Sign in as the creator to share it with everyone.",
+      );
     } catch { setNotice("Your birthday video could not be saved. Check available browser storage and try again."); }
   };
   const touchEnd = (event: TouchEvent<HTMLElement>) => {
