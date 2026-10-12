@@ -62,6 +62,7 @@ function BirthdayStory() {
   const [favoriteSongPlaying, setFavoriteSongPlaying] = useState(false);
   const [favoriteSongTime, setFavoriteSongTime] = useState(0);
   const [favoriteSongDuration, setFavoriteSongDuration] = useState(0);
+  const [videoPlaying, setVideoPlaying] = useState(false);
   const [finished, setFinished] = useState(false);
   const [notice, setNotice] = useState("");
   const [cloudUser, setCloudUser] = useState<string | null>(null);
@@ -70,6 +71,8 @@ function BirthdayStory() {
   const audio = useRef<HTMLAudioElement | null>(null);
   const favoriteAudio = useRef<HTMLAudioElement | null>(null);
   const backgroundWasPlayingBeforeFavorite = useRef(false);
+  const backgroundWasPlayingBeforeVideo = useRef(false);
+  const videoPlaybackActive = useRef(false);
   const cloudSaveSequence = useRef(0);
   const touchX = useRef<number | null>(null);
   const go = useCallback((value: number) => {
@@ -421,12 +424,49 @@ function BirthdayStory() {
       setNotice("The background song could not be resumed. Please try playing it again.");
     });
   }, []);
+  const pauseBackgroundForVideo = useCallback(() => {
+    videoPlaybackActive.current = true;
+    setVideoPlaying(true);
+    const player = audio.current;
+    if (player && !player.paused) {
+      backgroundWasPlayingBeforeVideo.current = true;
+      player.pause();
+    }
+  }, []);
+  const resumeBackgroundAfterVideo = useCallback(() => {
+    videoPlaybackActive.current = false;
+    setVideoPlaying(false);
+    if (!backgroundWasPlayingBeforeVideo.current) return;
+    const player = audio.current;
+    if (!player) {
+      backgroundWasPlayingBeforeVideo.current = false;
+      return;
+    }
+    player.volume = .28;
+    player.play().then(() => {
+      if (videoPlaybackActive.current) {
+        player.pause();
+        return;
+      }
+      backgroundWasPlayingBeforeVideo.current = false;
+      setPlaying(true);
+      setNotice("");
+    }).catch(() => {
+      if (videoPlaybackActive.current) return;
+      backgroundWasPlayingBeforeVideo.current = false;
+      setPlaying(false);
+      setNotice("The background song could not be resumed. Please try playing it again.");
+    });
+  }, []);
   useEffect(() => {
     if (page === 4) return;
     favoriteAudio.current?.pause();
     setFavoriteSongPlaying(false);
     resumeBackgroundAfterFavorite();
   }, [page, resumeBackgroundAfterFavorite]);
+  useEffect(() => {
+    if (page !== 8 && videoPlaybackActive.current) resumeBackgroundAfterVideo();
+  }, [page, resumeBackgroundAfterVideo]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") { setSettings(false); setLightbox(null); }
@@ -458,6 +498,7 @@ function BirthdayStory() {
     });
   };
   const toggleMusic = () => {
+    if (videoPlaybackActive.current) return;
     const player = audio.current;
     if (!player) { setSettings(true); return; }
     if (player.paused) {
@@ -562,13 +603,13 @@ function BirthdayStory() {
        {page === 5 && <Qualities expanded={expanded} onToggle={setExpanded} />}
       {page === 6 && <Letter story={story} />}
       {page === 7 && <BirthdaySurprise name={name} />}
-      {page === 8 && <Final story={story} name={name} video={video} finished={finished} onEnded={() => setFinished(true)} onAdd={() => setSettings(true)} onReplay={() => { setFinished(false); go(0); }} />}
+      {page === 8 && <Final story={story} name={name} video={video} finished={finished} onVideoPlay={pauseBackgroundForVideo} onVideoPause={resumeBackgroundAfterVideo} onEnded={() => setFinished(true)} onAdd={() => setSettings(true)} onReplay={() => { setFinished(false); go(0); }} />}
     </section></main>
     {page > 0 && <footer className="story-footer">
       <Button className="nav-control" onClick={() => go(page - 1)} variant="ghost"><ArrowLeft /> <span>Back</span></Button>
       <span className="chapter-count">{String(page + 1).padStart(2, "0")} <i>/</i> {String(chapters.length).padStart(2, "0")}</span>
       <div className="footer-actions">
-        <Button className={`music-control${playing ? " is-playing" : ""}`} onClick={toggleMusic} size="icon" variant="ghost" aria-label={playing ? "Pause background song" : music ? "Play background song" : "Add a background song"} title={playing ? "Pause background song" : music ? "Play background song" : "Add a background song"}>{playing ? <AudioLines /> : <Music2 />}</Button>
+        <Button className={`music-control${playing ? " is-playing" : ""}`} onClick={toggleMusic} disabled={videoPlaying} size="icon" variant="ghost" aria-label={playing ? "Pause background song" : music ? "Play background song" : "Add a background song"} title={videoPlaying ? "Background music is paused while the video plays" : playing ? "Pause background song" : music ? "Play background song" : "Add a background song"}>{playing ? <AudioLines /> : <Music2 />}</Button>
         <Button className="nav-control nav-next" onClick={() => page < chapters.length - 1 ? go(page + 1) : go(0)} variant="ghost"><span>{page < chapters.length - 1 ? "Next" : "Again"}</span>{page < chapters.length - 1 ? <ArrowRight /> : <Heart />}</Button>
       </div>
     </footer>}
@@ -750,10 +791,10 @@ function Letter({ story }: { story: Story }) { return <div className="letter-lay
   <p className="letter-body">{story.letter || defaultLetter}</p><span className="letter-flower">✳</span>
 </div></div>; }
 
-function Final({ story, name, video, finished, onEnded, onAdd, onReplay }: { story: Story; name: string; video: string; finished: boolean; onEnded: () => void; onAdd: () => void; onReplay: () => void }) { const favourite = story.photos.at(-1); return <div className={`final-layout${finished ? " final-finished" : ""}`}>
+function Final({ story, name, video, finished, onVideoPlay, onVideoPause, onEnded, onAdd, onReplay }: { story: Story; name: string; video: string; finished: boolean; onVideoPlay: () => void; onVideoPause: () => void; onEnded: () => void; onAdd: () => void; onReplay: () => void }) { const favourite = story.photos.at(-1); return <div className={`final-layout${finished ? " final-finished" : ""}`}>
   <div className="final-backdrop">{favourite && <img src={favourite.src} alt="" />}</div>
   {!finished ? <div className="final-content"><Eyebrow>One final thing…</Eyebrow><h2>This one is<br /><em>just for you.</em></h2><p>I wanted to tell you everything through this video.</p>
-    {video ? <div className="video-frame"><video controls playsInline preload="metadata" src={video} onEnded={onEnded}>Your browser does not support video playback.</video></div> : <button className="video-invitation" onClick={onAdd}><span className="video-play"><Play fill="currentColor" /></span><span>Her birthday film</span><small>Add your personal video</small></button>}
+   {video ? <div className="video-frame"><video controls playsInline preload="metadata" muted={false} src={video} onLoadedMetadata={(event) => { event.currentTarget.defaultMuted = false; event.currentTarget.muted = false; event.currentTarget.volume = 1; }} onPlay={(event) => { event.currentTarget.muted = false; event.currentTarget.volume = 1; onVideoPlay(); }} onPause={onVideoPause} onEnded={onEnded}>Your browser does not support video playback.</video></div> : <button className="video-invitation" onClick={onAdd}><span className="video-play"><Play fill="currentColor" /></span><span>Her birthday film</span><small>Add your personal video</small></button>}
   </div> : <div className="final-content final-message"><Eyebrow>Happy birthday</Eyebrow><h2>Happy Birthday,<br /><em>{name}.</em></h2><p>{story.wish || "You deserve all the happiness, love, and beautiful moments in the world. Here is to everything wonderful still ahead."}</p><p className="final-signature">With love, {story.from.trim() || "always"}</p><Button className="cinema-button" onClick={onReplay}>Replay from the beginning <ArrowLeft /></Button></div>}
 </div>; }
 

@@ -6,7 +6,7 @@ import { t as Slot } from "../_libs/radix-ui__react-slot.mjs";
 import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
 import { t as createClient } from "../_libs/supabase__supabase-js.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-B3U_0Fol.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-UyCX_Occ.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function cn(...inputs) {
@@ -112,6 +112,7 @@ function BirthdayStory() {
 	const [favoriteSongPlaying, setFavoriteSongPlaying] = (0, import_react.useState)(false);
 	const [favoriteSongTime, setFavoriteSongTime] = (0, import_react.useState)(0);
 	const [favoriteSongDuration, setFavoriteSongDuration] = (0, import_react.useState)(0);
+	const [videoPlaying, setVideoPlaying] = (0, import_react.useState)(false);
 	const [finished, setFinished] = (0, import_react.useState)(false);
 	const [notice, setNotice] = (0, import_react.useState)("");
 	const [cloudUser, setCloudUser] = (0, import_react.useState)(null);
@@ -120,6 +121,8 @@ function BirthdayStory() {
 	const audio = (0, import_react.useRef)(null);
 	const favoriteAudio = (0, import_react.useRef)(null);
 	const backgroundWasPlayingBeforeFavorite = (0, import_react.useRef)(false);
+	const backgroundWasPlayingBeforeVideo = (0, import_react.useRef)(false);
+	const videoPlaybackActive = (0, import_react.useRef)(false);
 	const cloudSaveSequence = (0, import_react.useRef)(0);
 	const touchX = (0, import_react.useRef)(null);
 	const go = (0, import_react.useCallback)((value) => {
@@ -378,12 +381,49 @@ function BirthdayStory() {
 			setNotice("The background song could not be resumed. Please try playing it again.");
 		});
 	}, []);
+	const pauseBackgroundForVideo = (0, import_react.useCallback)(() => {
+		videoPlaybackActive.current = true;
+		setVideoPlaying(true);
+		const player = audio.current;
+		if (player && !player.paused) {
+			backgroundWasPlayingBeforeVideo.current = true;
+			player.pause();
+		}
+	}, []);
+	const resumeBackgroundAfterVideo = (0, import_react.useCallback)(() => {
+		videoPlaybackActive.current = false;
+		setVideoPlaying(false);
+		if (!backgroundWasPlayingBeforeVideo.current) return;
+		const player = audio.current;
+		if (!player) {
+			backgroundWasPlayingBeforeVideo.current = false;
+			return;
+		}
+		player.volume = .28;
+		player.play().then(() => {
+			if (videoPlaybackActive.current) {
+				player.pause();
+				return;
+			}
+			backgroundWasPlayingBeforeVideo.current = false;
+			setPlaying(true);
+			setNotice("");
+		}).catch(() => {
+			if (videoPlaybackActive.current) return;
+			backgroundWasPlayingBeforeVideo.current = false;
+			setPlaying(false);
+			setNotice("The background song could not be resumed. Please try playing it again.");
+		});
+	}, []);
 	(0, import_react.useEffect)(() => {
 		if (page === 4) return;
 		favoriteAudio.current?.pause();
 		setFavoriteSongPlaying(false);
 		resumeBackgroundAfterFavorite();
 	}, [page, resumeBackgroundAfterFavorite]);
+	(0, import_react.useEffect)(() => {
+		if (page !== 8 && videoPlaybackActive.current) resumeBackgroundAfterVideo();
+	}, [page, resumeBackgroundAfterVideo]);
 	(0, import_react.useEffect)(() => {
 		const onKey = (event) => {
 			if (event.key === "Escape") {
@@ -423,6 +463,7 @@ function BirthdayStory() {
 		});
 	};
 	const toggleMusic = () => {
+		if (videoPlaybackActive.current) return;
 		const player = audio.current;
 		if (!player) {
 			setSettings(true);
@@ -650,6 +691,8 @@ function BirthdayStory() {
 							name,
 							video,
 							finished,
+							onVideoPlay: pauseBackgroundForVideo,
+							onVideoPause: resumeBackgroundAfterVideo,
 							onEnded: () => setFinished(true),
 							onAdd: () => setSettings(true),
 							onReplay: () => {
@@ -688,10 +731,11 @@ function BirthdayStory() {
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 							className: `music-control${playing ? " is-playing" : ""}`,
 							onClick: toggleMusic,
+							disabled: videoPlaying,
 							size: "icon",
 							variant: "ghost",
 							"aria-label": playing ? "Pause background song" : music ? "Play background song" : "Add a background song",
-							title: playing ? "Pause background song" : music ? "Play background song" : "Add a background song",
+							title: videoPlaying ? "Background music is paused while the video plays" : playing ? "Pause background song" : music ? "Play background song" : "Add a background song",
 							children: playing ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AudioLines, {}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Music2, {})
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
 							className: "nav-control nav-next",
@@ -1211,7 +1255,7 @@ function Letter({ story }) {
 		})
 	});
 }
-function Final({ story, name, video, finished, onEnded, onAdd, onReplay }) {
+function Final({ story, name, video, finished, onVideoPlay, onVideoPause, onEnded, onAdd, onReplay }) {
 	const favourite = story.photos.at(-1);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: `final-layout${finished ? " final-finished" : ""}`,
@@ -1237,7 +1281,19 @@ function Final({ story, name, video, finished, onEnded, onAdd, onReplay }) {
 						controls: true,
 						playsInline: true,
 						preload: "metadata",
+						muted: false,
 						src: video,
+						onLoadedMetadata: (event) => {
+							event.currentTarget.defaultMuted = false;
+							event.currentTarget.muted = false;
+							event.currentTarget.volume = 1;
+						},
+						onPlay: (event) => {
+							event.currentTarget.muted = false;
+							event.currentTarget.volume = 1;
+							onVideoPlay();
+						},
+						onPause: onVideoPause,
 						onEnded,
 						children: "Your browser does not support video playback."
 					})
