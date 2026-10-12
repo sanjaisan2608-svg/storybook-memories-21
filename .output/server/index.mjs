@@ -16,19 +16,19 @@ globalThis.__nitro_vite_envs__ = services;
 //#endregion
 //#region #nitro/virtual/public-assets-data
 var public_assets_data_default = {
-	"/assets/routes-Bc85x28z.js": {
-		"type": "text/javascript; charset=utf-8",
-		"etag": "\"11714-HLqgHLXymWsIXFBiD2Jo1n5PuCs\"",
-		"mtime": "2026-10-12T17:54:50.636Z",
-		"size": 71444,
-		"path": "../public/assets/routes-Bc85x28z.js"
-	},
 	"/favicon.ico": {
 		"type": "image/vnd.microsoft.icon",
 		"etag": "\"4f95-3RXc3p2mhEAs1WBwaIvE0Y0uu0Y\"",
 		"mtime": "2026-10-11T04:13:30.581Z",
 		"size": 20373,
 		"path": "../public/favicon.ico"
+	},
+	"/assets/routes-Bva3UaD1.js": {
+		"type": "text/javascript; charset=utf-8",
+		"etag": "\"11714-Az9UF2V944OlfTy9pZob25z/pAI\"",
+		"mtime": "2026-10-12T18:27:28.891Z",
+		"size": 71444,
+		"path": "../public/assets/routes-Bva3UaD1.js"
 	},
 	"/robots.txt": {
 		"type": "text/plain; charset=utf-8",
@@ -40,23 +40,23 @@ var public_assets_data_default = {
 	"/assets/midnight-rose-D_928pVl.jpg": {
 		"type": "image/jpeg",
 		"etag": "\"1beeb-V+KleMax3hUW1VJ2hkPWH0/WiuE\"",
-		"mtime": "2026-10-12T17:54:50.637Z",
+		"mtime": "2026-10-12T18:27:28.893Z",
 		"size": 114411,
 		"path": "../public/assets/midnight-rose-D_928pVl.jpg"
 	},
-	"/assets/styles-iVXSD90P.css": {
+	"/assets/styles-BPnM76LC.css": {
 		"type": "text/css; charset=utf-8",
-		"etag": "\"1e6ce-QplbqQdUbh9atL6Do+kOBJhuUQY\"",
-		"mtime": "2026-10-12T17:54:50.638Z",
-		"size": 124622,
-		"path": "../public/assets/styles-iVXSD90P.css"
+		"etag": "\"1ed55-R1gd4OwWHeDsPepHg5AD6jzyJDg\"",
+		"mtime": "2026-10-12T18:27:28.897Z",
+		"size": 126293,
+		"path": "../public/assets/styles-BPnM76LC.css"
 	},
-	"/assets/index-BrH0YWYZ.js": {
+	"/assets/index-Bzmh-65A.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"8f753-HOYx9Q3Tyfdh4tmhr4hs+ZeYVJ8\"",
-		"mtime": "2026-10-12T17:54:50.636Z",
+		"etag": "\"8f753-5d2UiDeMhLp89mwyc687mVJyDz8\"",
+		"mtime": "2026-10-12T18:27:28.889Z",
 		"size": 587603,
-		"path": "../public/assets/index-BrH0YWYZ.js"
+		"path": "../public/assets/index-Bzmh-65A.js"
 	}
 };
 //#endregion
