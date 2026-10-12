@@ -1,31 +1,5 @@
 //#region node_modules/@supabase/postgrest-js/dist/index.mjs
 /**
-* Default number of retry attempts.
-*/
-var DEFAULT_MAX_RETRIES = 3;
-/**
-* Default exponential backoff delay function.
-* Delays: 1s, 2s, 4s, 8s, ... (max 30s)
-*
-* @param attemptIndex - Zero-based index of the retry attempt
-* @returns Delay in milliseconds before the next retry
-*/
-var getRetryDelay = (attemptIndex) => Math.min(1e3 * 2 ** attemptIndex, 3e4);
-/**
-* Status codes that are safe to retry.
-* 520 = Cloudflare timeout/connection errors (transient)
-* 503 = PostgREST schema cache not yet loaded (transient, signals retry via Retry-After header)
-*/
-var RETRYABLE_STATUS_CODES = [520, 503];
-/**
-* HTTP methods that are safe to retry (idempotent operations).
-*/
-var RETRYABLE_METHODS = [
-	"GET",
-	"HEAD",
-	"OPTIONS"
-];
-/**
 * Error format
 *
 * Returned by every PostgREST request that fails. When something fails, the
@@ -81,6 +55,83 @@ var PostgrestError = class extends Error {
 	}
 };
 /**
+* Default number of retry attempts.
+*/
+var DEFAULT_MAX_RETRIES = 3;
+/**
+* Default exponential backoff delay function.
+* Delays: 1s, 2s, 4s, 8s, ... (max 30s)
+*
+* @param attemptIndex - Zero-based index of the retry attempt
+* @returns Delay in milliseconds before the next retry
+*/
+var getRetryDelay = (attemptIndex) => Math.min(1e3 * 2 ** attemptIndex, 3e4);
+/**
+* Status codes that are safe to retry.
+* 520 = Cloudflare timeout/connection errors (transient)
+* 503 = PostgREST schema cache not yet loaded (transient, signals retry via Retry-After header)
+*/
+var RETRYABLE_STATUS_CODES = [520, 503];
+/**
+* HTTP methods that are safe to retry (idempotent operations).
+*/
+var RETRYABLE_METHODS = [
+	"GET",
+	"HEAD",
+	"OPTIONS"
+];
+function _typeof(o) {
+	"@babel/helpers - typeof";
+	return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(o$1) {
+		return typeof o$1;
+	} : function(o$1) {
+		return o$1 && "function" == typeof Symbol && o$1.constructor === Symbol && o$1 !== Symbol.prototype ? "symbol" : typeof o$1;
+	}, _typeof(o);
+}
+function toPrimitive(t, r) {
+	if ("object" != _typeof(t) || !t) return t;
+	var e = t[Symbol.toPrimitive];
+	if (void 0 !== e) {
+		var i = e.call(t, r || "default");
+		if ("object" != _typeof(i)) return i;
+		throw new TypeError("@@toPrimitive must return a primitive value.");
+	}
+	return ("string" === r ? String : Number)(t);
+}
+function toPropertyKey(t) {
+	var i = toPrimitive(t, "string");
+	return "symbol" == _typeof(i) ? i : i + "";
+}
+function _defineProperty(e, r, t) {
+	return (r = toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
+		value: t,
+		enumerable: !0,
+		configurable: !0,
+		writable: !0
+	}) : e[r] = t, e;
+}
+function ownKeys(e, r) {
+	var t = Object.keys(e);
+	if (Object.getOwnPropertySymbols) {
+		var o = Object.getOwnPropertySymbols(e);
+		r && (o = o.filter(function(r$1) {
+			return Object.getOwnPropertyDescriptor(e, r$1).enumerable;
+		})), t.push.apply(t, o);
+	}
+	return t;
+}
+function _objectSpread2(e) {
+	for (var r = 1; r < arguments.length; r++) {
+		var t = null != arguments[r] ? arguments[r] : {};
+		r % 2 ? ownKeys(Object(t), !0).forEach(function(r$1) {
+			_defineProperty(e, r$1, t[r$1]);
+		}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function(r$1) {
+			Object.defineProperty(e, r$1, Object.getOwnPropertyDescriptor(t, r$1));
+		});
+	}
+	return e;
+}
+/**
 * Sleep for a given number of milliseconds.
 * If an AbortSignal is provided, the sleep resolves early when the signal is aborted.
 */
@@ -109,6 +160,55 @@ function shouldRetry(method, status, attemptCount, retryEnabled) {
 	if (!RETRYABLE_METHODS.includes(method)) return false;
 	if (!RETRYABLE_STATUS_CODES.includes(status)) return false;
 	return true;
+}
+/**
+* Perform a request with the retry policy shared by every PostgREST call.
+*
+* Idempotent methods (GET, HEAD, OPTIONS) are retried up to
+* `DEFAULT_MAX_RETRIES` times when the fetch rejects or the server answers
+* with a retryable status (503, 520). The wait honours the `Retry-After`
+* header when present and backs off exponentially otherwise. Retried
+* attempts carry an `X-Retry-Count` header. Aborted requests (including
+* `AbortSignal.timeout()`, which rejects with `TimeoutError`) and
+* non-idempotent methods are never retried: their rejection propagates
+* unchanged. A response body is drained before its request is retried.
+*/
+async function fetchWithRetry(fetchImpl, url, request, retryEnabled) {
+	let attemptCount = 0;
+	while (true) {
+		const headers = _objectSpread2({}, request.headers);
+		if (attemptCount > 0) headers["X-Retry-Count"] = String(attemptCount);
+		let res;
+		try {
+			res = await fetchImpl(url, {
+				method: request.method,
+				headers,
+				body: request.body,
+				signal: request.signal
+			});
+		} catch (fetchError) {
+			var _request$signal;
+			if ((fetchError === null || fetchError === void 0 ? void 0 : fetchError.name) === "AbortError" || (fetchError === null || fetchError === void 0 ? void 0 : fetchError.code) === "ABORT_ERR" || (fetchError === null || fetchError === void 0 ? void 0 : fetchError.name) === "TimeoutError" && ((_request$signal = request.signal) === null || _request$signal === void 0 ? void 0 : _request$signal.aborted)) throw fetchError;
+			if (!RETRYABLE_METHODS.includes(request.method)) throw fetchError;
+			if (retryEnabled && attemptCount < DEFAULT_MAX_RETRIES) {
+				const delay = getRetryDelay(attemptCount);
+				attemptCount++;
+				await sleep(delay, request.signal);
+				continue;
+			}
+			throw fetchError;
+		}
+		if (shouldRetry(request.method, res.status, attemptCount, retryEnabled)) {
+			var _res$headers$get, _res$headers;
+			const retryAfterHeader = (_res$headers$get = (_res$headers = res.headers) === null || _res$headers === void 0 ? void 0 : _res$headers.get("Retry-After")) !== null && _res$headers$get !== void 0 ? _res$headers$get : null;
+			const delay = retryAfterHeader !== null ? Math.max(0, parseInt(retryAfterHeader, 10) || 0) * 1e3 : getRetryDelay(attemptCount);
+			await res.text();
+			attemptCount++;
+			await sleep(delay, request.signal);
+			continue;
+		}
+		return res;
+	}
 }
 var PostgrestBuilder = class {
 	/**
@@ -278,43 +378,17 @@ var PostgrestBuilder = class {
 		}
 		const _fetch = this.fetch;
 		const executeWithRetry = async () => {
-			let attemptCount = 0;
-			while (true) {
-				const headers = {};
-				_this.headers.forEach((value, key) => {
-					headers[key] = value;
-				});
-				if (attemptCount > 0) headers["X-Retry-Count"] = String(attemptCount);
-				let res$1;
-				try {
-					res$1 = await _fetch(_this.url.toString(), {
-						method: _this.method,
-						headers,
-						body: JSON.stringify(_this.body, (_, value) => typeof value === "bigint" ? value.toString() : value),
-						signal: _this.signal
-					});
-				} catch (fetchError) {
-					if ((fetchError === null || fetchError === void 0 ? void 0 : fetchError.name) === "AbortError" || (fetchError === null || fetchError === void 0 ? void 0 : fetchError.code) === "ABORT_ERR") throw fetchError;
-					if (!RETRYABLE_METHODS.includes(_this.method)) throw fetchError;
-					if (_this.retryEnabled && attemptCount < DEFAULT_MAX_RETRIES) {
-						const delay = getRetryDelay(attemptCount);
-						attemptCount++;
-						await sleep(delay, _this.signal);
-						continue;
-					}
-					throw fetchError;
-				}
-				if (shouldRetry(_this.method, res$1.status, attemptCount, _this.retryEnabled)) {
-					var _res$headers$get, _res$headers;
-					const retryAfterHeader = (_res$headers$get = (_res$headers = res$1.headers) === null || _res$headers === void 0 ? void 0 : _res$headers.get("Retry-After")) !== null && _res$headers$get !== void 0 ? _res$headers$get : null;
-					const delay = retryAfterHeader !== null ? Math.max(0, parseInt(retryAfterHeader, 10) || 0) * 1e3 : getRetryDelay(attemptCount);
-					await res$1.text();
-					attemptCount++;
-					await sleep(delay, _this.signal);
-					continue;
-				}
-				return await _this.processResponse(res$1);
-			}
+			const headers = {};
+			_this.headers.forEach((value, key) => {
+				headers[key] = value;
+			});
+			const res$1 = await fetchWithRetry(_fetch, _this.url.toString(), {
+				method: _this.method,
+				headers,
+				body: JSON.stringify(_this.body, (_, value) => typeof value === "bigint" ? value.toString() : value),
+				signal: _this.signal
+			}, _this.retryEnabled);
+			return await _this.processResponse(res$1);
 		};
 		let res = executeWithRetry();
 		if (!this.shouldThrowOnError) res = res.catch((fetchError) => {
@@ -372,7 +446,7 @@ var PostgrestBuilder = class {
 		let status = res.status;
 		let statusText = res.statusText;
 		if (res.ok) {
-			var _this$headers$get2, _res$headers$get2;
+			var _this$headers$get2, _res$headers$get;
 			if (_this2.method !== "HEAD") {
 				var _this$headers$get;
 				const body = await res.text();
@@ -392,7 +466,7 @@ var PostgrestBuilder = class {
 				}
 			}
 			const countHeader = (_this$headers$get2 = _this2.headers.get("Prefer")) === null || _this$headers$get2 === void 0 ? void 0 : _this$headers$get2.match(/count=(exact|planned|estimated)/);
-			const contentRange = (_res$headers$get2 = res.headers.get("content-range")) === null || _res$headers$get2 === void 0 ? void 0 : _res$headers$get2.split("/");
+			const contentRange = (_res$headers$get = res.headers.get("content-range")) === null || _res$headers$get === void 0 ? void 0 : _res$headers$get.split("/");
 			if (countHeader && contentRange && contentRange.length > 1) count = parseInt(contentRange[1]);
 			if (_this2.isMaybeSingle && Array.isArray(data)) if (data.length > 1) {
 				error = {
@@ -405,6 +479,10 @@ var PostgrestBuilder = class {
 				count = null;
 				status = 406;
 				statusText = "Not Acceptable";
+				if (_this2.shouldThrowOnError) {
+					var _error$hint;
+					throw new PostgrestError(_objectSpread2(_objectSpread2({}, error), {}, { hint: (_error$hint = error.hint) !== null && _error$hint !== void 0 ? _error$hint : "" }));
+				}
 			} else if (data.length === 1) data = data[0];
 			else data = null;
 		} else {
@@ -590,7 +668,7 @@ var PostgrestTransformBuilder = class extends PostgrestBuilder {
 	*     }
 	*   ],
 	*   "status": 201,
-	*   "statusText": "Created"
+	*   "statusText": ""
 	* }
 	* ```
 	*/
@@ -1027,8 +1105,8 @@ var PostgrestTransformBuilder = class extends PostgrestBuilder {
 	*       "hint": "",
 	*       "code": ""
 	*     },
-	*     "status": 400,
-	*     "statusText": "Bad Request"
+	*     "status": 0,
+	*     "statusText": ""
 	*   }
 	*
 	* ```
@@ -2046,7 +2124,7 @@ var PostgrestQueryBuilder = class {
 	*     "message": "permission denied for table characters"
 	*   },
 	*   "status": 401,
-	*   "statusText": "Unauthorized"
+	*   "statusText": ""
 	* }
 	* ```
 	*
@@ -2823,7 +2901,7 @@ var PostgrestQueryBuilder = class {
 	* ```json
 	* {
 	*   "status": 201,
-	*   "statusText": "Created"
+	*   "statusText": ""
 	* }
 	* ```
 	*
@@ -2860,7 +2938,7 @@ var PostgrestQueryBuilder = class {
 	*     }
 	*   ],
 	*   "status": 201,
-	*   "statusText": "Created"
+	*   "statusText": ""
 	* }
 	* ```
 	*
@@ -2894,7 +2972,7 @@ var PostgrestQueryBuilder = class {
 	*     "message": "duplicate key value violates unique constraint \"countries_pkey\""
 	*   },
 	*   "status": 409,
-	*   "statusText": "Conflict"
+	*   "statusText": ""
 	* }
 	* ```
 	*/
@@ -3041,7 +3119,7 @@ var PostgrestQueryBuilder = class {
 	*     }
 	*   ],
 	*   "status": 201,
-	*   "statusText": "Created"
+	*   "statusText": ""
 	* }
 	* ```
 	*
@@ -3090,7 +3168,7 @@ var PostgrestQueryBuilder = class {
 	*     }
 	*   ],
 	*   "status": 201,
-	*   "statusText": "Created"
+	*   "statusText": ""
 	* }
 	* ```
 	*
@@ -3135,7 +3213,7 @@ var PostgrestQueryBuilder = class {
 	*     "message": "duplicate key value violates unique constraint \"users_handle_key\""
 	*   },
 	*   "status": 409,
-	*   "statusText": "Conflict"
+	*   "statusText": ""
 	* }
 	* ```
 	*/
@@ -3214,7 +3292,7 @@ var PostgrestQueryBuilder = class {
 	* ```json
 	* {
 	*   "status": 204,
-	*   "statusText": "No Content"
+	*   "statusText": ""
 	* }
 	* ```
 	*
@@ -3382,7 +3460,7 @@ var PostgrestQueryBuilder = class {
 	* ```json
 	* {
 	*   "status": 204,
-	*   "statusText": "No Content"
+	*   "statusText": ""
 	* }
 	* ```
 	*
@@ -3452,7 +3530,7 @@ var PostgrestQueryBuilder = class {
 	* ```json
 	* {
 	*   "status": 204,
-	*   "statusText": "No Content"
+	*   "statusText": ""
 	* }
 	* ```
 	*/
@@ -3472,56 +3550,53 @@ var PostgrestQueryBuilder = class {
 		});
 	}
 };
-function _typeof(o) {
-	"@babel/helpers - typeof";
-	return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(o$1) {
-		return typeof o$1;
-	} : function(o$1) {
-		return o$1 && "function" == typeof Symbol && o$1.constructor === Symbol && o$1 !== Symbol.prototype ? "symbol" : typeof o$1;
-	}, _typeof(o);
+/**
+* Build the error for a failed OpenAPI request. PostgREST answers with a JSON
+* error object when it produced the failure itself; proxies and disabled
+* OpenAPI output answer with plain text or an empty body, in which case the
+* body (or, failing that, the status text) becomes the message.
+*/
+function toOpenApiError(body, statusText) {
+	try {
+		const parsed = JSON.parse(body);
+		if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+			var _parsed$message, _parsed$details, _parsed$hint, _parsed$code;
+			return new PostgrestError({
+				message: String((_parsed$message = parsed.message) !== null && _parsed$message !== void 0 ? _parsed$message : body),
+				details: (_parsed$details = parsed.details) !== null && _parsed$details !== void 0 ? _parsed$details : "",
+				hint: (_parsed$hint = parsed.hint) !== null && _parsed$hint !== void 0 ? _parsed$hint : "",
+				code: (_parsed$code = parsed.code) !== null && _parsed$code !== void 0 ? _parsed$code : ""
+			});
+		}
+	} catch (_unused) {}
+	return new PostgrestError({
+		message: body || statusText,
+		details: "",
+		hint: "",
+		code: ""
+	});
 }
-function toPrimitive(t, r) {
-	if ("object" != _typeof(t) || !t) return t;
-	var e = t[Symbol.toPrimitive];
-	if (void 0 !== e) {
-		var i = e.call(t, r || "default");
-		if ("object" != _typeof(i)) return i;
-		throw new TypeError("@@toPrimitive must return a primitive value.");
-	}
-	return ("string" === r ? String : Number)(t);
-}
-function toPropertyKey(t) {
-	var i = toPrimitive(t, "string");
-	return "symbol" == _typeof(i) ? i : i + "";
-}
-function _defineProperty(e, r, t) {
-	return (r = toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
-		value: t,
-		enumerable: !0,
-		configurable: !0,
-		writable: !0
-	}) : e[r] = t, e;
-}
-function ownKeys(e, r) {
-	var t = Object.keys(e);
-	if (Object.getOwnPropertySymbols) {
-		var o = Object.getOwnPropertySymbols(e);
-		r && (o = o.filter(function(r$1) {
-			return Object.getOwnPropertyDescriptor(e, r$1).enumerable;
-		})), t.push.apply(t, o);
-	}
-	return t;
-}
-function _objectSpread2(e) {
-	for (var r = 1; r < arguments.length; r++) {
-		var t = null != arguments[r] ? arguments[r] : {};
-		r % 2 ? ownKeys(Object(t), !0).forEach(function(r$1) {
-			_defineProperty(e, r$1, t[r$1]);
-		}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function(r$1) {
-			Object.defineProperty(e, r$1, Object.getOwnPropertyDescriptor(t, r$1));
-		});
-	}
-	return e;
+/**
+* Build the response for a request that yielded no readable body: the fetch
+* itself rejected (no status is known, so it is 0), or the body stream failed
+* while being read (the response status is preserved).
+*/
+function toTransportFailure(cause, status, statusText) {
+	var _err$name;
+	const err = cause;
+	return {
+		success: false,
+		error: new PostgrestError({
+			message: `${(_err$name = err === null || err === void 0 ? void 0 : err.name) !== null && _err$name !== void 0 ? _err$name : "FetchError"}: ${err === null || err === void 0 ? void 0 : err.message}`,
+			details: "",
+			hint: "",
+			code: ""
+		}),
+		data: null,
+		count: null,
+		status,
+		statusText
+	};
 }
 /**
 * PostgREST client.
@@ -3630,6 +3705,73 @@ var PostgrestClient = class PostgrestClient {
 			urlLengthLimit: this.urlLengthLimit,
 			retry: this.retry
 		});
+	}
+	/**
+	* Fetch the OpenAPI description PostgREST publishes for this client's schema.
+	*
+	* The document lists only the tables, views and functions the caller's role
+	* holds privileges on; PostgREST applies that filtering server-side. The
+	* schema is the one this client was created with, so call `.schema()` first
+	* to describe a different one. Transient failures are retried according to
+	* the client's `retry` option, like any other idempotent request.
+	*
+	* @example
+	* ```ts
+	* const { data, error } = await supabase.getOpenApiSpec()
+	* ```
+	*
+	* @example Describe a schema other than the client default
+	* ```ts
+	* const { data, error } = await supabase.schema('billing').getOpenApiSpec()
+	* ```
+	*
+	* @category Database
+	*/
+	async getOpenApiSpec() {
+		var _this = this;
+		var _this$fetch;
+		const headers = new Headers(_this.headers);
+		headers.set("Accept", "application/openapi+json");
+		if (_this.schemaName) headers.set("Accept-Profile", _this.schemaName);
+		const requestHeaders = {};
+		headers.forEach((value, key) => {
+			requestHeaders[key] = value;
+		});
+		const fetchImpl = (_this$fetch = _this.fetch) !== null && _this$fetch !== void 0 ? _this$fetch : globalThis.fetch;
+		let res;
+		try {
+			var _this$retry;
+			res = await fetchWithRetry(fetchImpl, `${_this.url}/`, {
+				method: "GET",
+				headers: requestHeaders
+			}, (_this$retry = _this.retry) !== null && _this$retry !== void 0 ? _this$retry : true);
+		} catch (fetchError) {
+			return toTransportFailure(fetchError, 0, "");
+		}
+		let body;
+		try {
+			body = await res.text();
+		} catch (readError) {
+			return toTransportFailure(readError, res.status, res.statusText);
+		}
+		if (res.ok) try {
+			return {
+				success: true,
+				error: null,
+				data: JSON.parse(body),
+				count: null,
+				status: res.status,
+				statusText: res.statusText
+			};
+		} catch (_unused2) {}
+		return {
+			success: false,
+			error: toOpenApiError(body, res.statusText),
+			data: null,
+			count: null,
+			status: res.status,
+			statusText: res.statusText
+		};
 	}
 	/**
 	* Perform a function call.
@@ -3797,7 +3939,7 @@ var PostgrestClient = class PostgrestClient {
 	* ```
 	*/
 	rpc(fn, args = {}, { head = false, get = false, count } = {}) {
-		var _this$fetch;
+		var _this$fetch2;
 		let method;
 		const url = new URL(`${this.url}/rpc/${fn}`);
 		let body;
@@ -3824,7 +3966,7 @@ var PostgrestClient = class PostgrestClient {
 			headers,
 			schema: this.schemaName,
 			body,
-			fetch: (_this$fetch = this.fetch) !== null && _this$fetch !== void 0 ? _this$fetch : fetch,
+			fetch: (_this$fetch2 = this.fetch) !== null && _this$fetch2 !== void 0 ? _this$fetch2 : fetch,
 			urlLengthLimit: this.urlLengthLimit,
 			retry: this.retry
 		});

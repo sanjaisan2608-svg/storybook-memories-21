@@ -6,7 +6,7 @@ import { t as Slot } from "../_libs/radix-ui__react-slot.mjs";
 import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
 import { t as createClient } from "../_libs/supabase__supabase-js.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-R80ZbTKL.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-B3U_0Fol.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function cn(...inputs) {
@@ -46,9 +46,9 @@ var Button = import_react.forwardRef(({ className, variant, size, asChild = fals
 	});
 });
 Button.displayName = "Button";
-var supabaseUrl = void 0;
+var supabaseUrl = "https://iltnzvbvthrsxaidzfnx.supabase.co";
 var supabaseAnonKey = void 0;
-var supabaseConfigured = Boolean(supabaseUrl);
+var supabaseConfigured = Boolean(supabaseAnonKey);
 var supabase = supabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey) : null;
 var midnight_rose_default = "/assets/midnight-rose-D_928pVl.jpg";
 var chapters = [

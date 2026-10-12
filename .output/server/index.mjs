@@ -16,12 +16,12 @@ globalThis.__nitro_vite_envs__ = services;
 //#endregion
 //#region #nitro/virtual/public-assets-data
 var public_assets_data_default = {
-	"/assets/routes-ChA7XUtm.js": {
+	"/assets/routes-Bc85x28z.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"138cc-HkMKjZovrXnwahfrEIR7lkh+T5E\"",
-		"mtime": "2026-10-12T16:57:15.356Z",
-		"size": 80076,
-		"path": "../public/assets/routes-ChA7XUtm.js"
+		"etag": "\"11714-HLqgHLXymWsIXFBiD2Jo1n5PuCs\"",
+		"mtime": "2026-10-12T17:54:50.636Z",
+		"size": 71444,
+		"path": "../public/assets/routes-Bc85x28z.js"
 	},
 	"/favicon.ico": {
 		"type": "image/vnd.microsoft.icon",
@@ -40,23 +40,23 @@ var public_assets_data_default = {
 	"/assets/midnight-rose-D_928pVl.jpg": {
 		"type": "image/jpeg",
 		"etag": "\"1beeb-V+KleMax3hUW1VJ2hkPWH0/WiuE\"",
-		"mtime": "2026-10-12T16:57:15.358Z",
+		"mtime": "2026-10-12T17:54:50.637Z",
 		"size": 114411,
 		"path": "../public/assets/midnight-rose-D_928pVl.jpg"
 	},
-	"/assets/styles-DEYEqDcO.css": {
+	"/assets/styles-iVXSD90P.css": {
 		"type": "text/css; charset=utf-8",
-		"etag": "\"1f040-YfaCAiNd1lQO5cT0NdTN07r0uwg\"",
-		"mtime": "2026-10-12T16:57:15.359Z",
-		"size": 127040,
-		"path": "../public/assets/styles-DEYEqDcO.css"
+		"etag": "\"1e6ce-QplbqQdUbh9atL6Do+kOBJhuUQY\"",
+		"mtime": "2026-10-12T17:54:50.638Z",
+		"size": 124622,
+		"path": "../public/assets/styles-iVXSD90P.css"
 	},
-	"/assets/index-ILn2vhQ-.js": {
+	"/assets/index-BrH0YWYZ.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"59f8a-53KQeO+47JEts0EsrsWNFhzFn+g\"",
-		"mtime": "2026-10-12T16:57:15.356Z",
-		"size": 368522,
-		"path": "../public/assets/index-ILn2vhQ-.js"
+		"etag": "\"8f753-HOYx9Q3Tyfdh4tmhr4hs+ZeYVJ8\"",
+		"mtime": "2026-10-12T17:54:50.636Z",
+		"size": 587603,
+		"path": "../public/assets/index-BrH0YWYZ.js"
 	}
 };
 //#endregion
